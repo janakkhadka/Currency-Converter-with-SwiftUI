@@ -44,7 +44,7 @@ class NetworkManager {
                     
                     if let conversionRate = json["conversion_rate"] as? Double,
                        let conversionResult = json["conversion_result"] as? Double,
-                       let lastUpdate = json["last_update"] as? Int {
+                       let lastUpdate = json["time_last_update_utc"] as? String {
                         let conversion = Conversion(conversionRate: conversionRate, conversionResult: conversionResult, lastUpdate: lastUpdate)
                         completion(conversion)
                     } else {

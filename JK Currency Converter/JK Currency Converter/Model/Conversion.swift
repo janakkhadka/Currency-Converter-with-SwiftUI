@@ -11,5 +11,5 @@ struct Conversion: Identifiable {
     let id = UUID()
     let conversionRate: Double
     let conversionResult: Double
-    let lastUpdate: Int
+    let lastUpdate: String
 }
