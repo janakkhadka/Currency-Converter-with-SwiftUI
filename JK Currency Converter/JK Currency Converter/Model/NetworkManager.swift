@@ -47,7 +47,7 @@ class NetworkManager {
                        let fromCurrency = json["base_code"] as? String,
                        let toCurrency = json["target_code"] as? String,
                        let lastUpdate = json["time_last_update_utc"] as? String {
-                        let conversion = Conversion(conversionRate: conversionRate, conversionResult: conversionResult, lastUpdate: lastUpdate, fromCurrency: fromCurrency, toCurrency: toCurrency, amount: amount)
+                        let conversion = Conversion(conversionRate: conversionRate, conversionResult: conversionResult, lastUpdate: lastUpdate, fromCurrency: fromCurrency, toCurrency: toCurrency)
                         completion(conversion)
                     } else {
                         print("Failed to parse required fields from JSON")

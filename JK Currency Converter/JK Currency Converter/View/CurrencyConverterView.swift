@@ -216,7 +216,7 @@ struct BottomCardView: View {
                                 .font(.system(size: 20))
                                 .padding(.bottom, 2)
                             if let converter = converterViewModel.converter{
-                                Text("\(String(format: "%.2f",converter.amount)) \(converter.fromCurrency) = \(String(format: "%.2f",converter.conversionRate)) \(converter.toCurrency)")
+                                Text("1.00 \(converter.fromCurrency) = \(String(format: "%.2f",converter.conversionRate)) \(converter.toCurrency)")
                                     .font(.system(size: 24, weight: .bold))
                                     .padding(.horizontal)
                             }else{
@@ -231,6 +231,7 @@ struct BottomCardView: View {
                     }
                     Divider()
                         .padding(.top)
+                        .padding(.horizontal,30)
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Last Updated On")

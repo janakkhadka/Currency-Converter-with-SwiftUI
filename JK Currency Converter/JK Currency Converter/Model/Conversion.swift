@@ -14,5 +14,4 @@ struct Conversion: Identifiable {
     let lastUpdate: String
     let fromCurrency: String
     let toCurrency: String
-    let amount: Double
 }
