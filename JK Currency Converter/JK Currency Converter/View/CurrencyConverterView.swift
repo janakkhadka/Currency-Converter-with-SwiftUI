@@ -8,21 +8,19 @@
 import SwiftUI
 
 struct CurrencyConverterView: View {
-    @State private var fromCurrency = "NPR"
-    @State private var toCurrency = "USD"
+    @State private var fromCurrency = "USD"
+    @State private var toCurrency = "NPR"
     @State private var amount: Double = 1
     
-    @ObservedObject private var currencyViewModel = CurrencyViewModel()
-    @ObservedObject private var converterViewModel = ConverterViewModel()
-    
+    @StateObject private var converterViewModel = ConverterViewModel()
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.gray.opacity(0.3).edgesIgnoringSafeArea(.all)
                 VStack {
-                    ConverterCardView(fromCurrency: $fromCurrency, toCurrency: $toCurrency, amount: $amount)
-                    BottomCardView(fromCurrency: $fromCurrency, toCurrency: $toCurrency, amount: $amount)
+                    ConverterCardView(fromCurrency: $fromCurrency, toCurrency: $toCurrency, amount: $amount, converterViewModel: converterViewModel)
+                    BottomCardView(fromCurrency: $fromCurrency, toCurrency: $toCurrency, amount: $amount, converterViewModel: converterViewModel)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -34,6 +32,9 @@ struct CurrencyConverterView: View {
                 }
             }
         }
+        .onAppear {
+            converterViewModel.fetchConversion(from: fromCurrency, to: toCurrency, amount: amount) //suruma load huda ko l lagi
+        }
     }
 }
 
@@ -42,7 +43,7 @@ struct ConverterCardView: View {
     @Binding var toCurrency: String
     @Binding var amount: Double
     
-    @ObservedObject private var converterViewModel = ConverterViewModel()
+    @ObservedObject var converterViewModel: ConverterViewModel
     
     var body: some View {
         RoundedRectangle(cornerRadius: 20)
@@ -69,10 +70,11 @@ struct ConverterCardView: View {
                             TextField("\(fromCurrency)", value: $amount, formatter: NumberFormatter())
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .keyboardType(.decimalPad)
-                                .frame(width: 120, height: 50)
+                                .frame(width: 120, height: 55)
                                 .padding(.vertical, 5)
                                 .background(.white)
-                                .font(.system(size: 45))
+                                .font(.system(size: 35))
+                                .cornerRadius(5)
                             Spacer()
                         }
                     }
@@ -96,13 +98,24 @@ struct ConverterCardView: View {
                             Spacer()
                             CurrencyPickerView(selectedCurrency: $toCurrency)
                             Spacer()
-                            Text("\(converterViewModel.converter.conversionResult)")
-                                .frame(width: 120, height: 50)
-                                .padding(.vertical, 5)
-                                .background(.white)
-                                .font(.system(size: 45))
-                                .cornerRadius(5)
+                            if let converter = converterViewModel.converter{
+                                Text("\(String(format: "%.2f",converter.conversionResult))")
+                                    .frame(width: 120, height: 55)
+                                    .padding(.vertical, 5)
+                                    .background(.white)
+                                    .font(.system(size: 30))
+                                    .cornerRadius(5)
+                                
+                            }else{
+                                Text("\(toCurrency)")
+                                    .frame(width: 120, height: 55)
+                                    .padding(.vertical, 5)
+                                    .background(.white)
+                                    .font(.system(size: 35))
+                                    .cornerRadius(5)
+                            }
                             Spacer()
+                            
                         }
                     }
                     
@@ -184,6 +197,9 @@ struct BottomCardView: View {
     @Binding var fromCurrency: String
     @Binding var toCurrency: String
     @Binding var amount: Double
+    
+    @ObservedObject var converterViewModel: ConverterViewModel
+    
     var body: some View {
         RoundedRectangle(cornerRadius: 20)
             .fill(.white)
@@ -199,10 +215,16 @@ struct BottomCardView: View {
                                 .padding(.horizontal)
                                 .font(.system(size: 20))
                                 .padding(.bottom, 2)
+                            if let converter = converterViewModel.converter{
+                                Text("\(String(format: "%.2f",converter.amount)) \(converter.fromCurrency) = \(String(format: "%.2f",converter.conversionRate)) \(converter.toCurrency)")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .padding(.horizontal)
+                            }else{
+                                Text("\(String(format: "%.2f",amount)) \(fromCurrency) = \(toCurrency)")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .padding(.horizontal)
+                            }
                             
-                            Text("\(amount) \(fromCurrency) = \(toCurrency)")
-                                .font(.system(size: 24, weight: .bold))
-                                .padding(.horizontal)
                         }
                         .padding()
                         Spacer()
@@ -217,12 +239,31 @@ struct BottomCardView: View {
                                 .padding(.horizontal)
                                 .font(.system(size: 20))
                                 
-                            
-                            Text("abc")
-                                .font(.system(size: 24, weight: .bold))
-                                .padding(.horizontal)
-                                .padding(.bottom, 30)
-                                .padding(.top, 2)
+                            if let converter = converterViewModel.converter{
+                                if let (date, time) = extractDateAndTime(from: converter.lastUpdate){
+                                    
+                                    Text("\(date)")
+                                        .font(.system(size: 24, weight: .bold))
+                                        .padding(.horizontal)
+                                        .padding(.top, 1)
+                                    Text("\(time)")
+                                        .font(.system(size: 24, weight: .bold))
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 30)
+                                        
+                                }
+                            }else{
+                                Text("hello")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .padding(.horizontal)
+                                    .padding(.top, 1)
+                                    .opacity(0)
+                                Text("")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .padding(.horizontal)
+                                    .padding(.bottom, 30)
+                                    .opacity(0)
+                            }
                         }
                         .padding()
                         Spacer()
@@ -232,6 +273,25 @@ struct BottomCardView: View {
         
     }
 }
+
+func extractDateAndTime(from dateString: String) -> (String, String)? {
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss Z"
+        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        guard let date = inputFormatter.date(from: dateString) else {
+            return nil
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMMM dd, yyyy"
+        
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "hh:mm a"
+    print(dateFormatter.string(from: date))
+        
+        return (dateFormatter.string(from: date), timeFormatter.string(from: date))
+    }
 
 #Preview {
     CurrencyConverterView()

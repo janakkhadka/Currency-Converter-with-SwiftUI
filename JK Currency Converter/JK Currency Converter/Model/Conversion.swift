@@ -12,4 +12,7 @@ struct Conversion: Identifiable {
     let conversionRate: Double
     let conversionResult: Double
     let lastUpdate: String
+    let fromCurrency: String
+    let toCurrency: String
+    let amount: Double
 }
